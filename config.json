@@ -1,0 +1,108 @@
+﻿{
+    "windowTitle":  "Sixes Hub",
+    "subtitle":  "by Sixpepper",
+    "enableChocolatey":  false,
+    "wingetExclusions":  [
+                             "RyanYuuki.AnymeX"
+                         ],
+    "apps":  [
+                 {
+                     "name":  "Google Chrome",
+                     "wingetId":  "Google.Chrome",
+                     "shortcutExe":  "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe"
+                 },
+                 {
+                     "name":  "Discord",
+                     "wingetId":  "Discord.Discord",
+                     "shortcutExe":  "%LocalAppData%\\Discord\\Update.exe"
+                 },
+                 {
+                     "name":  "Steam",
+                     "wingetId":  "Valve.Steam",
+                     "shortcutExe":  "%ProgramFiles(x86)%\\Steam\\Steam.exe"
+                 },
+                 {
+                     "name":  "7-Zip",
+                     "wingetId":  "7zip.7zip",
+                     "shortcutExe":  "%ProgramFiles%\\7-Zip\\7zFM.exe"
+                 },
+                 {
+                     "name":  "WinRAR",
+                     "wingetId":  "RARLab.WinRAR",
+                     "shortcutExe":  "%ProgramFiles%\\WinRAR\\WinRAR.exe"
+                 },
+                 {
+                     "name":  "VLC Media Player",
+                     "wingetId":  "VideoLAN.VLC",
+                     "shortcutExe":  "%ProgramFiles%\\VideoLAN\\VLC\\vlc.exe"
+                 },
+                 {
+                     "name":  "Notepad++",
+                     "wingetId":  "Notepad++.Notepad++",
+                     "shortcutExe":  "%ProgramFiles%\\Notepad++\\notepad++.exe"
+                 },
+                 {
+                     "name":  "Visual Studio Code",
+                     "wingetId":  "Microsoft.VisualStudioCode",
+                     "shortcutExe":  "%LocalAppData%\\Programs\\Microsoft VS Code\\Code.exe"
+                 },
+                 {
+                     "name":  "Firefox",
+                     "wingetId":  "Mozilla.Firefox",
+                     "shortcutExe":  "%ProgramFiles%\\Mozilla Firefox\\firefox.exe"
+                 }
+             ],
+    "websites":  [
+                     {
+                         "name":  "Anna\u0027s Archive",
+                         "url":  "https://annas-archive.li/"
+                     },
+                     {
+                         "name":  "Libby (Library Audiobooks)",
+                         "url":  "https://libbyapp.com/"
+                     },
+                     {
+                         "name":  "Project Gutenberg (Free Books)",
+                         "url":  "https://www.gutenberg.org/"
+                     },
+                     {
+                         "name":  "Standard Ebooks",
+                         "url":  "https://standardebooks.org/"
+                     },
+                     {
+                         "name":  "Open Library",
+                         "url":  "https://openlibrary.org/"
+                     }
+                 ],
+    "darkMode":  false,
+    "movieSites":  [
+                       {
+                           "name":  "Rive stream",
+                           "url":  "https://rivestream.org/"
+                       },
+                       {
+                           "name":  "Tubi",
+                           "url":  "https://tubitv.com/"
+                       },
+                       {
+                           "name":  "Prime Video",
+                           "url":  "https://www.amazon.com/Prime-Video/b?node=2676882011"
+                       },
+                       {
+                           "name":  "Disney+",
+                           "url":  "https://www.disneyplus.com/"
+                       },
+                       {
+                           "name":  "Hulu",
+                           "url":  "https://www.hulu.com/"
+                       },
+                       {
+                           "name":  "Max",
+                           "url":  "https://www.max.com/"
+                       },
+                       {
+                           "name":  "YouTube",
+                           "url":  "https://www.youtube.com/"
+                       }
+                   ]
+}
