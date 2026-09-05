@@ -5,7 +5,7 @@ param(
 )
 
 
-# Patched v4: fixed Tag-colon parsing issue
+
 <#
     Sixes Hub - Media + Maintenance Edition (Safe Build)
     ----------------------------------------------------
@@ -30,7 +30,7 @@ param(
       That makes this tool general-purpose and keeps distribution safe.
 
     Recommended run:
-      powershell -NoProfile -ExecutionPolicy Bypass -File .\SixesHub.ps1
+      powershell -NoProfile -ExecutionPolicy Bypass -File .\Open Sixes Hub.cmd
 
 #>
 
@@ -251,7 +251,7 @@ function Normalize-Config {
 function Load-Config {
     if (!(Test-Path $ConfigPath)) {
         Write-Host "config.json not found at: $ConfigPath" -ForegroundColor Red
-        Write-Host "Create config.json first (you can copy config.sample.json), then rerun."
+        Write-Host "Create config.json first (copy config.example.json), then rerun."
         exit 1
     }
 
@@ -780,7 +780,7 @@ function Ensure-WinRAR {
 function Extract-ArchiveToDownloads {
     param([string]$FilePath)
 
-    $downloads = [Environment]::GetFolderPath("UserProfile") + "\Downloads"
+    $downloads = Join-Path $ScriptDir "Downloads"
     $baseName = [IO.Path]::GetFileNameWithoutExtension($FilePath)
     $dest = Join-Path $downloads $baseName
 

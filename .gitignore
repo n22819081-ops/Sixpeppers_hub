@@ -1,2 +1,6 @@
 # Personal local state — commit config.example.json instead
 config.json
+
+# Created at runtime by the hub
+logs/
+Downloads/
