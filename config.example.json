@@ -1,0 +1,58 @@
+{
+    "windowTitle": "Sixes Hub",
+    "subtitle": "by Sixpepper",
+    "enableChocolatey": false,
+    "wingetExclusions": [
+        "Example.Publisher.App"
+    ],
+    "apps": [
+        {
+            "name": "Google Chrome",
+            "wingetId": "Google.Chrome",
+            "shortcutExe": "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe"
+        },
+        {
+            "name": "Discord",
+            "wingetId": "Discord.Discord",
+            "shortcutExe": "%LocalAppData%\\Discord\\Update.exe"
+        },
+        {
+            "name": "Steam",
+            "wingetId": "Valve.Steam",
+            "shortcutExe": "%ProgramFiles(x86)%\\Steam\\Steam.exe"
+        },
+        {
+            "name": "7-Zip",
+            "wingetId": "7zip.7zip",
+            "shortcutExe": "%ProgramFiles%\\7-Zip\\7zFM.exe"
+        },
+        {
+            "name": "WinRAR",
+            "wingetId": "RARLab.WinRAR",
+            "shortcutExe": "%ProgramFiles%\\WinRAR\\WinRAR.exe"
+        },
+        {
+            "name": "VLC Media Player",
+            "wingetId": "VideoLAN.VLC",
+            "shortcutExe": "%ProgramFiles%\\VideoLAN\\VLC\\vlc.exe"
+        },
+        {
+            "name": "Notepad++",
+            "wingetId": "Notepad++.Notepad++",
+            "shortcutExe": "%ProgramFiles%\\Notepad++\\notepad++.exe"
+        },
+        {
+            "name": "Visual Studio Code",
+            "wingetId": "Microsoft.VisualStudioCode",
+            "shortcutExe": "%LocalAppData%\\Programs\\Microsoft VS Code\\Code.exe"
+        },
+        {
+            "name": "Firefox",
+            "wingetId": "Mozilla.Firefox",
+            "shortcutExe": "%ProgramFiles%\\Mozilla Firefox\\firefox.exe"
+        }
+    ],
+    "websites": [],
+    "darkMode": false,
+    "movieSites": []
+}

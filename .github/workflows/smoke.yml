@@ -1,0 +1,23 @@
+name: Smoke
+
+on: [push, pull_request]
+
+jobs:
+  validate-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate config.example.json parses as JSON
+        run: python -c "import json, sys; json.load(open('config.example.json')); print('config.example.json OK')"
+      - name: Validate config.example.json has required keys
+        run: |
+          python - <<'EOF'
+          import json
+          cfg = json.load(open('config.example.json'))
+          required = ["windowTitle", "wingetExclusions", "apps", "darkMode"]
+          missing = [k for k in required if k not in cfg]
+          assert not missing, f"missing keys: {missing}"
+          for app in cfg["apps"]:
+              assert "name" in app and "wingetId" in app, f"bad app entry: {app}"
+          print("required keys present")
+          EOF

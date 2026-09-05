@@ -1,5 +1,5 @@
-# SixesHub MediaMaintenance patched v6.1 (auto-close console tasks; remove Press-Enter prompts)
-# PATCHED_V5 - fixed $Tag: parsing issue; verify with Get-FileHash
+# SixesHub MediaMaintenance patched v6.4.2 (auto-close console tasks; remove Press-Enter prompts)
+# v6.4.2 - fixed $Tag: parsing issue; verify with Get-FileHash
 param(
     [string]$AutoAction = ""
 )
