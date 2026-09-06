@@ -1279,6 +1279,11 @@ function Start-SixesHub {
 
     # ---- Custom-drawn tab headers (separate "pill" look with hover + active state) ----
     $Tabs.DrawMode = "OwnerDrawFixed"
+    # TabControl does not expose DoubleBuffered publicly. Enable it through the
+    # protected property so hover redraws do not flash the native background.
+    $controlFlags = [System.Reflection.BindingFlags]::Instance -bor [System.Reflection.BindingFlags]::NonPublic
+    $doubleBufferedProperty = [System.Windows.Forms.Control].GetProperty("DoubleBuffered", $controlFlags)
+    if ($doubleBufferedProperty) { $doubleBufferedProperty.SetValue($Tabs, $true, $null) }
     $global:TabHoverIndex = -1
     $Tabs.Add_DrawItem({
         param($s, $e)
@@ -1287,18 +1292,23 @@ function Start-SixesHub {
         $active = ($idx -eq $Tabs.SelectedIndex)
         # PS 5.1: cast bounds to int up front ($e.Bounds.X + 2 fails as a System.Object[] op).
         $bx = [int]$e.Bounds.X; $by = [int]$e.Bounds.Y; $bw = [int]$e.Bounds.Width; $bh = [int]$e.Bounds.Height
-        $rw = [Math]::Max(24, ($bw - 6))
-        $rect = New-Object System.Drawing.Rectangle(($bx + 2), ($by + 3), $rw, ($bh - 5))
+        # Paint the whole tab dark first: the native light-gray tab background otherwise shows
+        # through around the pill, and the pill's left arc reads as a stray "symbol".
+        $e.Graphics.FillRectangle((New-Object System.Drawing.SolidBrush($global:Theme.TabStripBack)), $e.Bounds)
+        # Keep the pill inside the native header bounds. In particular, leave a 3px
+        # bottom inset so WinForms' page-border paint cannot clip the lower curve.
+        $rect = New-Object System.Drawing.Rectangle($bx, ($by + 3), ($bw - 5), ($bh - 6))
         $color = if ($active) { $global:Theme.TabActiveBack } elseif ($idx -eq $global:TabHoverIndex) { $global:Theme.TabHoverBack } else { $global:Theme.TabInactiveBack }
         $fore  = if ($active) { $global:Theme.TabActiveFore } else { $global:Theme.TextFore }
         $path = New-Object System.Drawing.Drawing2D.GraphicsPath
-        $rr = 7.0
-        $path.AddArc($rect.X, $rect.Y, $rr*2, $rr*2, 90, 270)
-        $path.AddArc($rect.Right - $rr*2, $rect.Y, $rr*2, $rr*2, 270, 90)
-        $path.AddLine($rect.Right, $rect.Y + $rr, $rect.Right, $rect.Bottom - $rr)
-        $path.AddArc($rect.Right - $rr*2, $rect.Bottom - $rr*2, $rr*2, $rr*2, 0, 90)
-        $path.AddLine($rect.X, $rect.Bottom - $rr, $rect.X + $rr, $rect.Bottom)
-        $path.AddArc($rect.X, $rect.Bottom - $rr*2, $rr*2, $rr*2, 270, 90)
+        $rr = [Math]::Min(7.0, ([double]$rect.Height / 2.0))
+        $diameter = $rr * 2.0
+        # Four non-overlapping quarter-arcs produce a valid rounded rectangle.
+        # The previous 270-degree left arc self-intersected near the bottom edge.
+        $path.AddArc($rect.X, $rect.Y, $diameter, $diameter, 180, 90)
+        $path.AddArc($rect.Right - $diameter, $rect.Y, $diameter, $diameter, 270, 90)
+        $path.AddArc($rect.Right - $diameter, $rect.Bottom - $diameter, $diameter, $diameter, 0, 90)
+        $path.AddArc($rect.X, $rect.Bottom - $diameter, $diameter, $diameter, 90, 90)
         $path.CloseFigure()
         $e.Graphics.FillPath((New-Object System.Drawing.SolidBrush($color)), $path)
         # TextRenderer (System.Windows.Forms) centers text via flags and resolves cleanly in
@@ -1306,6 +1316,15 @@ function Start-SixesHub {
         $flags = [System.Windows.Forms.TextFormatFlags]::HorizontalAlignmentCenter -bor [System.Windows.Forms.TextFormatFlags]::VerticalCenter
         [System.Windows.Forms.TextRenderer]::DrawText($e.Graphics, $Tabs.TabPages[$idx].Text, $Tabs.Font, $rect, $fore, $flags)
     })
+    # The default (Normal) tab width has only ~2px total padding, so the longest labels
+    # ("Maintenance" = 88px, plus "Settings"/"Convert") clip their last character. WinForms
+    # does not expose a MeasureItem event to PS 5.1 (Add_MeasureItem silently fails to attach),
+    # so use SizeMode=Fixed: every tab gets a uniform width sized to the longest label — an
+    # even, clearly-separate strip with no clipping.
+    $Tabs.SizeMode = [System.Windows.Forms.TabSizeMode]::Fixed
+    # The framework's default fixed height is too short for Segoe UI 10 at common
+    # Windows DPI scales and clips the lower part of the owner-drawn headers.
+    $Tabs.ItemSize = New-Object System.Drawing.Size(96, 28)
     $Tabs.Add_MouseMove({
         param($s, $e)
         $newHover = -1
@@ -1313,15 +1332,26 @@ function Start-SixesHub {
             if ($Tabs.GetTabRect($i).Contains($e.Location)) { $newHover = $i; break }
         }
         if ($newHover -ne $global:TabHoverIndex) {
+            $oldHover = $global:TabHoverIndex
             $global:TabHoverIndex = $newHover
-            $Tabs.Invalidate()
+            # Repaint only the two headers whose visual state changed. Invalidating
+            # the entire control made every tab blink while crossing the strip.
+            if ($oldHover -ge 0 -and $oldHover -lt $Tabs.TabPages.Count) {
+                $Tabs.Invalidate($Tabs.GetTabRect($oldHover))
+            }
+            if ($newHover -ge 0 -and $newHover -lt $Tabs.TabPages.Count) {
+                $Tabs.Invalidate($Tabs.GetTabRect($newHover))
+            }
         }
     })
     $Tabs.Add_MouseLeave({
         param($s, $e)
         if ($global:TabHoverIndex -ne -1) {
+            $oldHover = $global:TabHoverIndex
             $global:TabHoverIndex = -1
-            $Tabs.Invalidate()
+            if ($oldHover -ge 0 -and $oldHover -lt $Tabs.TabPages.Count) {
+                $Tabs.Invalidate($Tabs.GetTabRect($oldHover))
+            }
         }
     })
 
@@ -2314,6 +2344,27 @@ $btnOpenMovies.Add_Click({
         $lblCPU.ForeColor = $global:Theme.TextFore
         $lblRAM.ForeColor = $global:Theme.TextFore
         $lblDisk.ForeColor = $global:Theme.TextFore
+
+        # Group boxes are never themed by default -> black captions on a dark background.
+        foreach ($g in @($grpDash,$grpMp3,$grpCustom,$grpVid)) {
+            if ($g) {
+                $g.BackColor = $global:Theme.TabBack
+                $g.ForeColor = $global:Theme.TextFore
+            }
+        }
+        # Custom Script Runner: combo + buttons that were missing from the themed list.
+        if ($cmbScripts) {
+            $cmbScripts.BackColor = $global:Theme.InputBack
+            $cmbScripts.ForeColor = $global:Theme.InputFore
+        }
+        foreach ($b in @($btnLoadScript,$btnRefreshScripts)) {
+            if ($b) {
+                $b.BackColor = $global:Theme.ButtonBack
+                $b.ForeColor = $global:Theme.ButtonFore
+            }
+        }
+        # Layout spacer: hide the blank bordered rectangle next to "Open SpotX Info Page".
+        if ($btnDummy) { $btnDummy.Visible = $false }
     }
 
     $btnSaveSettings.Add_Click({
