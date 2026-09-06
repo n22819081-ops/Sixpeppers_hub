@@ -1281,6 +1281,9 @@ function Start-SixesHub {
     $Tabs.DrawMode = "OwnerDrawFixed"
     # TabControl does not expose DoubleBuffered publicly. Enable it through the
     # protected property so hover redraws do not flash the native background.
+    # Combined with the targeted old/new GetTabRect invalidation below (instead of a
+    # full-control Invalidate), this removes the whole-strip blink on hover.
+    # USER-CONFIRMED 2026-09: a cursor sweep across all eight tabs showed no flicker.
     $controlFlags = [System.Reflection.BindingFlags]::Instance -bor [System.Reflection.BindingFlags]::NonPublic
     $doubleBufferedProperty = [System.Windows.Forms.Control].GetProperty("DoubleBuffered", $controlFlags)
     if ($doubleBufferedProperty) { $doubleBufferedProperty.SetValue($Tabs, $true, $null) }
