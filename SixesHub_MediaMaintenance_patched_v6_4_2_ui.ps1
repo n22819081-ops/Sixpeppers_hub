@@ -1182,6 +1182,11 @@ function Build-Theme([bool]$isDark) {
             SubtitleFore = [System.Drawing.Color]::FromArgb(200,200,200)
 
             TabBack      = [System.Drawing.Color]::FromArgb(24,24,24)
+            TabStripBack   = [System.Drawing.Color]::FromArgb(18,18,18)
+            TabInactiveBack= [System.Drawing.Color]::FromArgb(42,42,42)
+            TabHoverBack   = [System.Drawing.Color]::FromArgb(56,56,56)
+            TabActiveBack  = [System.Drawing.Color]::FromArgb(30,45,75)
+            TabActiveFore  = [System.Drawing.Color]::FromArgb(120,180,255)
             TextFore     = [System.Drawing.Color]::FromArgb(235,235,235)
 
             ButtonBack   = [System.Drawing.Color]::FromArgb(35,35,35)
@@ -1199,6 +1204,11 @@ function Build-Theme([bool]$isDark) {
             SubtitleFore = [System.Drawing.Color]::Gainsboro
 
             TabBack      = [System.Drawing.Color]::White
+            TabStripBack   = [System.Drawing.Color]::FromArgb(245,246,250)
+            TabInactiveBack= [System.Drawing.Color]::FromArgb(226,229,236)
+            TabHoverBack   = [System.Drawing.Color]::FromArgb(208,212,222)
+            TabActiveBack  = [System.Drawing.Color]::FromArgb(30,45,75)
+            TabActiveFore  = [System.Drawing.Color]::White
             TextFore     = [System.Drawing.Color]::Black
 
             ButtonBack   = [System.Drawing.Color]::White
@@ -1266,6 +1276,54 @@ function Start-SixesHub {
     $Tabs.Dock = "Fill"
     $Tabs.Font = New-Object System.Drawing.Font("Segoe UI", 10)
     $Split.Panel1.Controls.Add($Tabs)
+
+    # ---- Custom-drawn tab headers (separate "pill" look with hover + active state) ----
+    $Tabs.DrawMode = "OwnerDrawFixed"
+    $global:TabHoverIndex = -1
+    $Tabs.Add_DrawItem({
+        param($s, $e)
+        $idx = $e.Index
+        if ($idx -lt 0 -or $idx -ge $Tabs.TabPages.Count) { return }
+        $active = ($idx -eq $Tabs.SelectedIndex)
+        # PS 5.1: cast bounds to int up front ($e.Bounds.X + 2 fails as a System.Object[] op).
+        $bx = [int]$e.Bounds.X; $by = [int]$e.Bounds.Y; $bw = [int]$e.Bounds.Width; $bh = [int]$e.Bounds.Height
+        $rw = [Math]::Max(24, ($bw - 6))
+        $rect = New-Object System.Drawing.Rectangle(($bx + 2), ($by + 3), $rw, ($bh - 5))
+        $color = if ($active) { $global:Theme.TabActiveBack } elseif ($idx -eq $global:TabHoverIndex) { $global:Theme.TabHoverBack } else { $global:Theme.TabInactiveBack }
+        $fore  = if ($active) { $global:Theme.TabActiveFore } else { $global:Theme.TextFore }
+        $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+        $rr = 7.0
+        $path.AddArc($rect.X, $rect.Y, $rr*2, $rr*2, 90, 270)
+        $path.AddArc($rect.Right - $rr*2, $rect.Y, $rr*2, $rr*2, 270, 90)
+        $path.AddLine($rect.Right, $rect.Y + $rr, $rect.Right, $rect.Bottom - $rr)
+        $path.AddArc($rect.Right - $rr*2, $rect.Bottom - $rr*2, $rr*2, $rr*2, 0, 90)
+        $path.AddLine($rect.X, $rect.Bottom - $rr, $rect.X + $rr, $rect.Bottom)
+        $path.AddArc($rect.X, $rect.Bottom - $rr*2, $rr*2, $rr*2, 270, 90)
+        $path.CloseFigure()
+        $e.Graphics.FillPath((New-Object System.Drawing.SolidBrush($color)), $path)
+        # TextRenderer (System.Windows.Forms) centers text via flags and resolves cleanly in
+        # PS 5.1 (unlike System.Drawing.Drawing2D.StringFormat, which throws "assembly not loaded").
+        $flags = [System.Windows.Forms.TextFormatFlags]::HorizontalAlignmentCenter -bor [System.Windows.Forms.TextFormatFlags]::VerticalCenter
+        [System.Windows.Forms.TextRenderer]::DrawText($e.Graphics, $Tabs.TabPages[$idx].Text, $Tabs.Font, $rect, $fore, $flags)
+    })
+    $Tabs.Add_MouseMove({
+        param($s, $e)
+        $newHover = -1
+        for ($i = 0; $i -lt $Tabs.TabPages.Count; $i++) {
+            if ($Tabs.GetTabRect($i).Contains($e.Location)) { $newHover = $i; break }
+        }
+        if ($newHover -ne $global:TabHoverIndex) {
+            $global:TabHoverIndex = $newHover
+            $Tabs.Invalidate()
+        }
+    })
+    $Tabs.Add_MouseLeave({
+        param($s, $e)
+        if ($global:TabHoverIndex -ne -1) {
+            $global:TabHoverIndex = -1
+            $Tabs.Invalidate()
+        }
+    })
 
     $logPanel = New-Object System.Windows.Forms.Panel
     $logPanel.Dock = "Fill"
@@ -2165,12 +2223,13 @@ $btnOpenMovies.Add_Click({
         $title.ForeColor = $global:Theme.TitleFore
         $subtitle.ForeColor = $global:Theme.SubtitleFore
 
-        $Tabs.BackColor = $global:Theme.TabBack
+        $Tabs.BackColor = $global:Theme.TabStripBack
         $Tabs.ForeColor = $global:Theme.TextFore
         foreach ($tp in $Tabs.TabPages) {
             $tp.BackColor = $global:Theme.TabBack
             $tp.ForeColor = $global:Theme.TextFore
         }
+        $Tabs.Invalidate()
 
         $lblLog.ForeColor = $global:Theme.TextFore
 
