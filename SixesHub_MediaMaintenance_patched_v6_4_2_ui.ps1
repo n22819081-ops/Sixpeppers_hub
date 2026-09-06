@@ -1316,11 +1316,16 @@ function Start-SixesHub {
         $flags = [System.Windows.Forms.TextFormatFlags]::HorizontalAlignmentCenter -bor [System.Windows.Forms.TextFormatFlags]::VerticalCenter
         [System.Windows.Forms.TextRenderer]::DrawText($e.Graphics, $Tabs.TabPages[$idx].Text, $Tabs.Font, $rect, $fore, $flags)
     })
-    # The default (Normal) tab width has only ~2px total padding, so the longest labels
-    # ("Maintenance" = 88px, plus "Settings"/"Convert") clip their last character. WinForms
-    # does not expose a MeasureItem event to PS 5.1 (Add_MeasureItem silently fails to attach),
-    # so use SizeMode=Fixed: every tab gets a uniform width sized to the longest label — an
-    # even, clearly-separate strip with no clipping.
+    # Tab sizing: the default (Normal) width gives each tab only ~2px total padding, so the
+    # longest labels ("Maintenance" = 88px, "Settings"/"Convert") clipped their last char.
+    # WinForms does NOT expose a MeasureItem event to PS 5.1 (tried Add_MeasureItem, the
+    # add_MeasureItem delegate, and Type.GetEvent — all silently fail; a C# Add-Type helper
+    # also fails unless you reference the loaded 4.8 S.W.F assembly by full path), so we use
+    # SizeMode=Fixed: every tab gets a uniform width — an even, clearly-separate strip.
+    # IF YOU ADD A TAB: ItemSize.Width below is sized for the current longest label
+    # ("Maintenance", 88px + padding = 96). A new label wider than 96px will clip —
+    # increase ItemSize.Width. Also: total strip = N tabs x width; 8 x 96 = 768px fits the
+    # ~960px window, so adding ~2+ tabs will push the strip past the window edge.
     $Tabs.SizeMode = [System.Windows.Forms.TabSizeMode]::Fixed
     # The framework's default fixed height is too short for Segoe UI 10 at common
     # Windows DPI scales and clips the lower part of the owner-drawn headers.
