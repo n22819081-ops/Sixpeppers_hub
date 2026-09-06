@@ -1329,6 +1329,12 @@ function Start-SixesHub {
     $Tabs.SizeMode = [System.Windows.Forms.TabSizeMode]::Fixed
     # The framework's default fixed height is too short for Segoe UI 10 at common
     # Windows DPI scales and clips the lower part of the owner-drawn headers.
+    # DPI STATUS (2026-09): this app has NO manifest/DPI-awareness config; the bare Form
+    # does not configure WinForms autoscaling itself, so actual scaling depends on the
+    # PS host + Windows compatibility settings (likely DPI-unaware => Windows bitmap-scales
+    # the window). 96x28 works at the current scale and the clipping fix is visually
+    # confirmed. If DPI awareness (esp. PerMonitorV2) is ever added, retest ItemSize at
+    # 100/125/150% and across monitors — it will NOT scale with the font automatically.
     $Tabs.ItemSize = New-Object System.Drawing.Size(96, 28)
     $Tabs.Add_MouseMove({
         param($s, $e)
