@@ -1819,7 +1819,27 @@ $Tabs.Add_SelectedIndexChanged({
     $null = $musicLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Absolute, 60)))
     $null = $musicLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Absolute, 120)))
     $null = $musicLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Percent, 100)))
-$TabMusic.Controls.Add($musicLayout)
+    $musicLayout.MinimumSize = New-Object System.Drawing.Size(0, 560)
+
+    # Keep every Music-tab action reachable when the main window is at its minimum
+    # height. WinForms can collapse the final percent-sized row before respecting a
+    # nested control's minimum height, which previously pushed the runner buttons
+    # above the visible portion of the Custom Script Runner group.
+    $musicScroll = New-Object System.Windows.Forms.Panel
+    $musicScroll.Dock = "Fill"
+    $musicScroll.AutoScroll = $true
+    $musicScroll.BackColor = $global:Theme.TabBack
+    $musicScroll.Controls.Add($musicLayout)
+    $musicScroll.Add_Layout({
+        param($s, $e)
+        $needed = 0
+        foreach ($ctrl in $s.Controls) {
+            if ($ctrl.Bottom -gt $needed) { $needed = $ctrl.Bottom }
+        }
+        $newSize = New-Object System.Drawing.Size(0, $needed)
+        if ($s.AutoScrollMinSize -ne $newSize) { $s.AutoScrollMinSize = $newSize }
+    })
+    $TabMusic.Controls.Add($musicScroll)
 
     $lblMusic = New-Object System.Windows.Forms.Label
     $lblMusic.Text = "Spotify + Music Tools"
@@ -1939,8 +1959,7 @@ $customLayout.SetColumnSpan($lblCustomWarn, 3)
 $txtCustom = New-Object System.Windows.Forms.TextBox
 $txtCustom.Multiline = $true
 $txtCustom.ScrollBars = "Vertical"
-$txtCustom.MinimumSize = New-Object System.Drawing.Size(0, 140)
-$txtCustom.Height = 140
+$txtCustom.MinimumSize = New-Object System.Drawing.Size(0, 70)
 $txtCustom.Font = New-Object System.Drawing.Font("Consolas", 9)
 $txtCustom.Dock = "Fill"
 $customLayout.Controls.Add($txtCustom, 0, 2)
@@ -2378,6 +2397,7 @@ $btnOpenMovies.Add_Click({
         }
         # Layout spacer: hide the blank bordered rectangle next to "Open SpotX Info Page".
         if ($btnDummy) { $btnDummy.Visible = $false }
+        if ($musicScroll) { $musicScroll.BackColor = $global:Theme.TabBack }
     }
 
     $btnSaveSettings.Add_Click({
